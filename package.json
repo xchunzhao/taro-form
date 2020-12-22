@@ -6,7 +6,7 @@
   "templateInfo": {
     "name": "default",
     "typescript": true,
-    "css": "none"
+    "css": "scss"
   },
   "scripts": {
     "build:weapp": "taro build --type weapp",

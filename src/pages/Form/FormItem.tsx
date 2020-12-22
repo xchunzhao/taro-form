@@ -1,17 +1,23 @@
-import Taro, { useContext, useEffect } from '@tarojs/taro'
-import Nerv from 'nervjs'
+import Taro from '@tarojs/taro'
+import { View, Text } from '@tarojs/components'
 import FieldContext from './FieldContext'
 import { FormItemProps } from './type'
-import { AtInput } from 'taro-ui';
-import { validateRules } from './utils/validateUtils';
-
+import { AtInput } from 'taro-ui'
+import { validateRules } from './utils/validateUtils'
+import './formItem.scss'
 
 class FormItem extends Taro.PureComponent<FormItemProps> {
-  static contextType = FieldContext
 
-  this.state = {
-    errorMsg: ''
+  constructor(props) {
+    super(props)
+    this.state = {
+      errorMsg: undefined,
+      forceUpdate: {}
+    }
   }
+
+  static externalClasses = ['wrapper-class', 'bottom-line-class']
+  
 
   componentDidMount() {
     this.cancelRegistField = this.context.registeField(this)
@@ -19,68 +25,131 @@ class FormItem extends Taro.PureComponent<FormItemProps> {
 
 
   getControlledProps = () => {
-    const { name, validateTrigger: 'onChange' } = this.props
-    // 这边存在一个问题
-    // 原组件的事件会被validateTrigger截断
+    const { name, validateTrigger='onChange' } = this.props
+    // clone props中的其他属性
+    const restProps = {...this.props } as FormItemProps
     const formInstance = this.context
-    const originFunc = this.props[validateTrigger]
-    return formInstance.getFieldValue ? {
+
+    // value: store.getByName(name)
+    // onChange: value => store.add({name: name, value: value })
+    /**
+     * 原事件绑定
+     * <Form
+     *  items=[]
+     *  validateTrigger="onChange"
+     *  onChange= ()=> {}
+     * />
+     * 
+     * */
+    const control = formInstance.getFieldValue ? {
+      ...restProps,
       value: formInstance.getFieldValue(name),
-      onChange: value => formInstance.setFieldsValue({ [name]: value })
-      [validateTrigger]: value => {
-        this.validateField()
-          .catch(e => this.setState({ errorMsg: e }))
-          .then(() => {
-            if(originFunc){
-              originFunc(value)
-            }
-            formInstance.setFieldsValue({ [name]: value })
-          })
-      }
+      onChange: value => {
+        formInstance.setFieldsValue({ [name]: value })
+        // 受控组件 onChange
+        const originTriggerFunc = restProps['onChange']
+        // 执行自定义onChange
+        if(originTriggerFunc) {
+          originTriggerFunc(value)
+        }
+      },
     } : {}
+    const originValidateTriggerFunc = control[validateTrigger]
+    /**
+     * 如果未定义validateTrigger 或者 定义validateTrigger对应的Func
+     * 如： {
+     *        validateTrigger: 'onBlur',
+     *        onBlur: () => {}
+     *      }
+     * 覆盖之前的func，增加校验逻辑
+     * 否则只执行校验
+     */
+    control[validateTrigger] = value => {
+      if(originValidateTriggerFunc) {
+        originValidateTriggerFunc(value)
+      }
+      this.validateField(value)
+    }
+    return control
   }
 
   onStoreChange = () => {
-    this.forceUpdate()
+    this.setState({
+      forceUpdate: {}
+    })
   }
 
   componentWillUnmount() {
     this.cancelRegistField && this.cancelRegistField()
   }
 
-  validateField = () => {
-    const { rules, name } = this.props;
-    if (!name || !rules || !rules.length) return [];
+  validateField = value => {
+    const { rules=[], name } = this.props;
     const cloneRule = [...rules];
-    const { getFieldValue } = this.context;
-    const value = getFieldValue(name);
   
-    return validateRules(name, value, cloneRule);
-  };
+    return new Promise((resolve, reject) => {
+      validateRules(name, value, cloneRule)
+        .then(v => {
+          this.setState({
+            errorMsg: undefined
+          })
+          resolve(v)
+        })
+        .catch(e => {
+          this.setState({
+            errorMsg: e
+          })
+          reject(e)
+        })
+    })
+  }
+
+  renderFormItem = () => {
+    const { type } = this.props
+    const controlledProps = this.getControlledProps()
+    let renderComp
+    // 需要根据type 匹配不同表单项 参考 type定义
+    switch (type) {
+      case 'input': {
+        renderComp = <AtInput {...controlledProps} />
+        break;
+      }
+      default: {
+        renderComp = <AtInput {...controlledProps} />
+        break;
+      }
+    }
+    return renderComp
+  }
 
   render() {
-    const { label, name } = this.props
-    const controlledProps = this.getControlledProps()
+    const { label, name, errorHandler="view", rules } = this.props
+    const { errorMsg } = this.state
+    const formWrapperClassname = `formItem-wrapper ${!!errorMsg ? 'formItem-error' : ''} wrapper-class`
     return (
       <View
-        className={`formItem-wrapper wrapper-class`}
+        className={formWrapperClassname}
       >
         <View
           className="formItem-bottomLine bottom-line-class"
         >
           <Text
-            className={'formItem-label'}
+            className={`formItem-label`}
           >
             {label}
           </Text>
-          {
-            
-            <AtInput name={name} {...controlledProps}/>
-          }
+          <View className="formItem">
+            {this.renderFormItem()}
+          </View>
+        </View>
+        <View className="formItem-msg" style={{ textAlign: 'left' }}>
+          <Text>{errorMsg}</Text>
         </View>
       </View>
     )
   }
 }
+
+FormItem.contextType = FieldContext
 
 export default FormItem

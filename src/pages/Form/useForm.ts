@@ -14,9 +14,10 @@ const useForm =  (form) => {
 }
 
 class FormStore {
-  // 维护
+  // 维护 {name: xx,value:xxx}
   private store = {}
   private initialValues = {}
+  // [ formIteminstance ]
   private fieldEntities = []
 
   private getFieldsValue = () => this.store
@@ -24,11 +25,15 @@ class FormStore {
 
   private validateFields = () => {
     const validateResults = this.fieldEntities.map(entity => {
-      const validateResult = entity.validateField() as Promise
       const { name } = entity.props
-      return validateResult
-                .then(() => ({ name, errors: [] }))
-                .catch(error => Promise.reject({ name, errors }))
+      const eneityValue = this.getFieldValue(name)
+      const validateResult = entity.validateField(eneityValue) as Promise
+                              
+      return new Promise((resolve, reject) => {
+        validateResult
+          .then(() => resolve({ name, errors: [] }))
+          .catch(e => reject({ name, errors: e }))
+      }
     })
     let hasError = false
     let count = validateResults.length
@@ -36,6 +41,10 @@ class FormStore {
     return new Promise((resolve, reject) => {
       validateResults.forEach((promise, index) => {
         promise
+          .catch(e => {
+            hasError = true
+            return e
+          })
           .then(result => {
             count -= 1
             results[index] = result
@@ -45,12 +54,9 @@ class FormStore {
             if(hasError) {
               reject(results)
             }
-            resolve(this.getFieldsValue)
+            resolve(this.getFieldsValue())
           })
-          .catch(e => {
-            hasError = true
-            return e
-          })
+          
       })
     })
   }
@@ -97,12 +103,19 @@ class FormStore {
     }
   }
 
+  private submit = (onFinish, onFinishFailed) => {
+    this.validateFields()
+      .then(values => onFinish && onFinish(values))
+      .catch(errors => onFinishFailed && onFinishFailed(errors))
+  }
+
   public getFormInstance = () => ({
     getFieldsValue: this.getFieldsValue,
     getFieldValue: this.getFieldValue
     setFieldsValue: this.setFieldsValue,
     registeField: this.registeField,
-    setInitialValues: this.setInitialValues
+    setInitialValues: this.setInitialValues,
+    submit: this.submit
   })
 }
 

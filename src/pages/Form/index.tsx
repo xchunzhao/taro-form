@@ -1,5 +1,6 @@
-import Taro, { useRef } from '@tarojs/taro';
+import Taro, { useRef, useImperativeHandle } from '@tarojs/taro';
 import FieldContext from './FieldContext';
+import Nerv from 'nervjs'
 import FormItem from './FormItem';
 import { FormProps } from './type';
 import useForm from './useForm';
@@ -13,6 +14,8 @@ const Form: Taro.FC<FormProps> = ({
 }) => {
   const [formInstance] = useForm(form)
   const mountedRef = useRef(false)
+
+  // useImperativeHandle(ref, () => formInstance)
 
   if(!mountedRef.current) {
     mountedRef.current = true

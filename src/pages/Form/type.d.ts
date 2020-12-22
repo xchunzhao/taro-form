@@ -30,9 +30,16 @@ export type ValidationRule = {
 
 export interface FormItemProps extends Omit<AtInputProps, 'onChange'> {
   label?: string
-  name?: string
+  name: string
+  initialValue?: any
   rules?: ValidationRule[]
-  type: 'input' | 'textarea' | 'picker' | 'adressPicker' 
+  type?: 'input' | 'textarea' | 'picker' | 'adressPicker' | 'checkbox' | 'radio'
   // 触发时机 默认onChange
   validateTrigger?: string | string [] | false
+  /**
+   * toast 将错误信息toast
+   * view 将toast信息展示
+   * 默认view
+   */
+  errorHandler?: 'toast' | 'view'
 }

@@ -14,27 +14,27 @@
 
 | Props | Type | Required | Default | Description |
 | ------ | ------ | ------ | ------ | ------- |
-| form | `FormInstance` | false | undefined | form表单实例 |
-| initialValues | `{ [key: string]: any }` | false | undefined | 表单初始值 |
+| `form` | `FormInstance` | false | undefined | form表单实例 |
+| `initialValues` | `{ [key: string]: any }` | false | undefined | 表单初始值 |
 
 
 - `FormItem`
 
 | Props | Type | Required | Default | Description |
 | ------ | ------ | ------ | ------ | ------ |
-| style | `string | CSSProperties` | false | {} | 表单项样式 |
-| label | string | true | '' | 表单项label |
-| name | string | true | '' | 表单项name |
-| initialValue | any | false | {} | 表单项初始值 |
-| rules | ValidationRule[] | false | [] | 表单项校验规则 |
-| type | ItemType | false | 'input' | 表单项类型 |
-| itemProps | `{ [props: string]: any }` | false | {} | 表单项props |
-| validateTrigger | string | false | 'onChange' | 触发校验的trigger |
-| renderExtra | JSX.Element | false | undefined | 表单项额外节点 |
+| `style | `CSSProperties` | false | {} | 表单项样式 |
+| `label` | string | true | '' | 表单项label |
+| `name` | string | true | '' | 表单项name |
+| `initialValue` | any | false | {} | 表单项初始值 |
+| `rules` | ValidationRule[] | false | [] | 表单项校验规则 |
+| `type` | ItemType | false | 'input' | 表单项类型 |
+| `itemProps` | `{ [props: string]: any }` | false | {} | 表单项props |
+| `validateTrigger` | string | false | 'onChange' | 触发校验的trigger |
+| `renderExtra` | JSX.Element | false | undefined | 表单项额外节点 |
 
 ### 基本使用
 
-```
+```javascript
 const Index = () => {
   const [form] = useForm()
 

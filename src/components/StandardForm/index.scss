@@ -38,6 +38,15 @@
   font-weight:400;
   text-align: right;
   color:#010410;
+
+  // 修改 taro ui 样式
+  .at-input {
+    margin: 0;
+    padding: 0;
+    &::after {
+      border-bottom: none;
+    }
+  }
 }
 
 .formItem-msg {
